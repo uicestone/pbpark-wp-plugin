@@ -74,62 +74,40 @@ function generate_weapp_qrcode($type, $id) {
 	return $wx->app_create_qr_code($key, '/pages/index/index' . $query, 1280);
 }
 
-function get_code($code_id, $coupon_id = null) {
-	if (!$coupon_id) {
-		$coupon_id = get_post_meta($code_id, 'coupon', true);
-	}
+function get_point($point_id, $with_questions = false) {
 
-	$code_post = get_post($code_id);
-	$coupon_post = get_post($coupon_id);
+	$point_post = get_post($point_id);
 
-	$code = array(
-		'id' => $code_id,
-		'codeString' => $code_post->post_name,
-		'couponId' => $coupon_id,
-		// 'expires_at' => '',
-		'coupon' => get_coupon($coupon_id),
-		'customerNickname' => get_post_meta($code_id, 'customer_nickname', true)
+	$point = array(
+		'id' => $point_id,
+		'content' => $point_post->post_content,
+		'thumbnail_url' => get_the_post_thumbnail_url($point_id, 'full')
 	);
 
-	$used = get_field('used', $code_id);
-
-	if ($used) {
-		$used_shop_post = get_post(get_post_meta($code_id, 'used_shop', true));
-		$scanned_manager_user = get_field('scanned_manager', $code_id);
-		$code = array_merge($code, array(
-			'used' => !!$used,
-			'usedShop' => array(
-				'id' => $used_shop_post->ID,
-				'name' => get_the_title($used_shop_post)
-			),
-			'usedTime' => get_field('used_time', $code_id),
-			'managerName' => $scanned_manager_user->display_name
-		));
+	if ($with_questions) {
+		$point['questions'] = array_map('get_question', get_field('questions', $point_id));
 	}
 
-	return (object) $code;
+	return (object) $point;
 }
 
-function get_coupon($coupon_id) {
-	$coupon_post = get_post($coupon_id);
+function get_question($question_id) {
+	$question_post = get_post($question_id);
 
-	$coupon = array(
-		'id' => $coupon_id,
-		'desc' => get_field('desc', $coupon_id),
-		'shops' => array_map(function($shop_post) {
-			return array(
-				'id' => $shop_post->ID,
-				'name' => get_the_title($shop_post->ID),
-				'address' => get_field('address', $shop_post->ID),
-				'phone' => get_field('phone', $shop_post->ID),
-			);
-		}, get_field('shops', $coupon_id) ?: array()),
-		'allShops' => !!get_field('all_shops', $coupon_id),
-		'thumbnailUrl' => get_the_post_thumbnail_url($coupon_id),
-		'content' => wpautop($coupon_post->post_content),
-		'validFrom' => get_field('valid_from', $coupon_id),
-		'validTill' => get_field('valid_till', $coupon_id),
+	$optionsAreImages = get_field('options_are_images', $question_id);
+
+	if ($optionsAreImages) {
+		$options = array_map('wp_get_attachment_url', explode(',', get_field('image_options', $question_id)));
+	} else {
+		$options = explode("\r\n", get_field('options', $question_id));
+	}
+
+	$question = array(
+		'id' => $question_id,
+		'title' => $question_post->post_title,
+		'optionsAreImages' => $optionsAreImages,
+		'options' => $options
 	);
 
-	return (object) $coupon;
+	return (object) $question;
 }

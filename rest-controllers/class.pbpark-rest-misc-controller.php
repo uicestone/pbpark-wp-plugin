@@ -29,7 +29,12 @@ class PB_Park_REST_Misc_Controller extends WP_REST_Controller {
 	public static function update_user_location( $request ) {
 		$openid = getallheaders()['openid'];
 		error_log('User location: ' . json_encode($request->get_json_params()));
-		return rest_ensure_response(['nearPoint' => null]);
+		$near_point = null;
+		if ($request->get_param('mockNearPoint')) { //  near a point
+			$point_post = get_posts('post_type=point&order=asc')[0]; // mock near point
+			$near_point = get_point($point_post->ID, true);
+		}
+		return rest_ensure_response(['nearPoint' => $near_point]);
 	}
 
 }

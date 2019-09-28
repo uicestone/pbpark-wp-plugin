@@ -24,7 +24,7 @@ class PB_Park_Admin {
 				'not_found' => '未找到公园'
 			),
 			'public' => true,
-			'supports' => array('title'),
+			'supports' => array('title', 'editor'),
 			'menu_icon' => 'dashicons-store',
 			'has_archive' => true
 		));
@@ -52,11 +52,7 @@ class PB_Park_Admin {
 				'not_found' => '未找到题目'
 			),
 			'public' => true,
-			'capability_type' => 'post',
-			'capabilities' => array(
-				'create_posts' => false
-			),
-			'map_meta_cap' => true,
+			'supports' => array('title'),
 			'menu_icon' => 'dashicons-admin-page'
 		));
 	}
