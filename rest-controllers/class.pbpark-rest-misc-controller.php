@@ -27,7 +27,7 @@ class PB_Park_REST_Misc_Controller extends WP_REST_Controller {
 	 * @return WP_Error|WP_REST_Response
 	 */
 	public static function update_user_location( $request ) {
-		$openid = getallheaders()['openid'];
+		$openid = $_SERVER['HTTP_OPENID'];
 		error_log('User location: ' . json_encode($request->get_json_params()));
 		$near_point = null;
 		if ($request->get_param('mockNearPoint')) { //  near a point
