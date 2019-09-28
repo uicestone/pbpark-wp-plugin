@@ -80,6 +80,7 @@ function get_point($point_id, $with_questions = false) {
 
 	$point = array(
 		'id' => $point_id,
+		'slug' => $point_post->post_name,
 		'content' => $point_post->post_content,
 		'thumbnail_url' => get_the_post_thumbnail_url($point_id, 'full')
 	);
