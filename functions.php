@@ -107,7 +107,8 @@ function get_question($question_id) {
 		'id' => $question_id,
 		'title' => $question_post->post_title,
 		'optionsAreImages' => $optionsAreImages,
-		'options' => $options
+		'options' => $options,
+		'trueOption' => get_field('true_option', $question_id) - 1
 	);
 
 	return (object) $question;
