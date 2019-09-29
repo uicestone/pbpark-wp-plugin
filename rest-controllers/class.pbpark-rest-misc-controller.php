@@ -24,6 +24,13 @@ class PB_Park_REST_Misc_Controller extends WP_REST_Controller {
 				'callback' => array( $this, 'save_quiz_result' ),
 			)
 		) );
+
+		register_rest_route( $this->namespace, '/ranking/(?P<park>.+)', array(
+			array(
+				'methods' => WP_REST_Server::READABLE,
+				'callback' => array( $this, 'get_ranking' ),
+			)
+		) );
 	}
 
 	/**
@@ -81,5 +88,91 @@ class PB_Park_REST_Misc_Controller extends WP_REST_Controller {
 			'totalCorrect' => $correct_total,
 			'totalDuration' => $duration_total
 		]);
+	}
+
+	/**
+	 * Get ranking list and user position of a park
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_Error|WP_REST_Response
+	 */
+	public static function get_ranking( $request ) {
+
+		if (is_wp_error($me = get_user_by_openid())) {
+			return rest_ensure_response($me);
+		}
+
+		$park = $request->get_param('park');
+
+		$my_duration = (int) get_user_meta($me->id, 'quiz_duration_' . $park, true);
+		$my_correct = (int) get_user_meta($me->id, 'quiz_correct_' . $park, true);
+
+		$users_more_correct = count(get_users([
+			'meta_query' => [
+				'correct_clause' => [
+					'key' => 'quiz_correct_' . $park,
+					'type' => 'numeric',
+					'compare' => '>',
+					'value' => $my_correct
+				]
+			],
+			'limit' => -1
+		]));
+
+		$users_same_correct_less_duration = count(get_users([
+			'meta_query' => [
+				'relation' => 'AND',
+				'correct_clause' => [
+					'key' => 'quiz_correct_' . $park,
+					'value' => $my_correct
+				],
+				'duration_clause' => [
+					'key' => 'quiz_duration_' . $park,
+					'type' => 'numeric',
+					'compare' => '<',
+					'value' => $my_duration
+				]
+			],
+			'limit' => -1
+		]));
+
+		$ranking_users = get_users([
+			'meta_query' => [
+				'relation' => 'AND',
+				'duration_clause' => [
+					'key' => 'quiz_duration_' . $park,
+					'type' => 'numeric'
+				],
+				'correct_clause' => [
+					'key' => 'quiz_correct_' . $park,
+					'type' => 'numeric'
+				]
+			],
+			'orderby' => array(
+				'correct_clause' => 'DESC',
+				'duration_clause' => 'ASC',
+			),
+		]);
+
+		$tops = array_map(function(WP_User $user) use ($park) {
+			return [
+				'id' => $user->ID,
+				'name' => $user->display_name,
+				'avatarUrl' => get_user_meta($user->ID, 'avatar_url', true),
+				'duration' => (int) get_user_meta($user->ID, 'quiz_duration_' . $park, true),
+				'correct' => (int) get_user_meta($user->ID, 'quiz_correct_' . $park, true)
+			];
+		}, $ranking_users);
+
+		$myRanking = [
+			'id' => $me->id,
+			'name' => $me->name,
+			'avatarUrl' => get_user_meta($me->id, 'avatar_url', true),
+			'duration' => $my_duration,
+			'correct' => $my_correct,
+			'ranking' => $users_more_correct + $users_same_correct_less_duration + 1
+		];
+
+		return rest_ensure_response(compact('tops', 'myRanking'));
 	}
 }
