@@ -43,6 +43,21 @@ class PB_Park_Admin {
 			'has_archive' => true
 		));
 
+		add_action( 'pre_get_posts', function ( $query ) {
+			if ( $query->get('post_type') !== 'point' ) {
+				return;
+			}
+
+			$orderby = $query->get('orderby');
+			$order = $query->get('order');
+
+			if (!$orderby && !$order) {
+				$query->set( 'order', 'asc' );
+				$query->set( 'orderby', 'post_name' );
+			}
+
+		}, 1);
+
 		register_post_type('question', array(
 			'label' => '题目',
 			'labels' => array(
