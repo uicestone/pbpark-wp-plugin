@@ -31,6 +31,13 @@ class PB_Park_REST_Misc_Controller extends WP_REST_Controller {
 				'callback' => array( $this, 'get_ranking' ),
 			)
 		) );
+
+		register_rest_route( $this->namespace, '/point/(?P<id>.+)', array(
+			array(
+				'methods' => WP_REST_Server::EDITABLE,
+				'callback' => array( $this, 'set_point_location' ),
+			)
+		) );
 	}
 
 	/**
@@ -45,9 +52,23 @@ class PB_Park_REST_Misc_Controller extends WP_REST_Controller {
 			return rest_ensure_response($user);
 		}
 
+		$body = $request->get_json_params();
+
 		error_log("User {$user->id} location: " . json_encode($request->get_json_params()));
 		$near_point = null;
-		if ($request->get_param('mockNearPoint')) { //  near a point
+		$points = array_map(function($point_post){
+			return get_point($point_post, true);
+		}, get_posts(['post_type'=>'point', 'posts_per_page'=>-1]));
+		foreach ($points as $point) {
+			if (!$point->latitude || !$point->longitude) {
+				continue;
+			}
+			if (haversine_great_circle_distance($point->latitude, $point->longitude, $body['latitude'], $body['longitude']) <= 15) {
+				$near_point = $point;
+				break;
+			}
+		}
+		if ($request->get_param('mockNearPoint') && !$near_point) { //  near a point
 			$point_post = get_posts('post_type=point&order=asc')[0]; // mock near point
 			$near_point = get_point($point_post->ID, true);
 		}
@@ -174,5 +195,19 @@ class PB_Park_REST_Misc_Controller extends WP_REST_Controller {
 		];
 
 		return rest_ensure_response(compact('tops', 'myRanking'));
+	}
+
+	/**
+	 * Set GPS location of a point
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_Error|WP_REST_Response
+	 */
+	public static function set_point_location( $request ) {
+		$point_id = $request->get_param('id');
+		$body = $request->get_json_params();
+		update_field('latitude', $body['latitude'], $point_id);
+		update_field('longitude', $body['longitude'], $point_id);
+		return rest_ensure_response(get_point($point_id));
 	}
 }

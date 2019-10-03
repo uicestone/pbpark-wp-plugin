@@ -76,17 +76,23 @@ function generate_weapp_qrcode($type, $id) {
 
 function get_point($point_id, $with_questions = false) {
 
-	$point_post = get_post($point_id);
+	if (is_a($point_id, 'WP_Post')) {
+		$point_post = $point_id;
+	} else {
+		$point_post = get_post($point_id);
+	}
 
 	$point = array(
-		'id' => $point_id,
+		'id' => $point_post->ID,
 		'slug' => $point_post->post_name,
 		'content' => $point_post->post_content,
-		'thumbnail_url' => get_the_post_thumbnail_url($point_id, 'full')
+		'thumbnail_url' => get_the_post_thumbnail_url($point_post->ID, 'full'),
+		'latitude' => get_field('latitude', $point_post->ID),
+		'longitude' => get_field('longitude', $point_post->ID)
 	);
 
 	if ($with_questions) {
-		$point['questions'] = array_map('get_question', get_field('questions', $point_id));
+		$point['questions'] = array_map('get_question', get_field('questions', $point_post->ID));
 	}
 
 	return (object) $point;
