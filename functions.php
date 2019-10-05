@@ -84,8 +84,9 @@ function get_point($point_id, $with_questions = false, $user = null) {
 
 	$point = array(
 		'id' => $point_post->ID,
+		'name' => $point_post->post_title,
 		'slug' => $point_post->post_name,
-		'content' => $point_post->post_content,
+		'content' => preg_replace('/(\r?\n){2,}/', "\n", $point_post->post_content),
 		'thumbnail_url' => get_the_post_thumbnail_url($point_post->ID, 'full'),
 		'latitude' => get_field('latitude', $point_post->ID),
 		'longitude' => get_field('longitude', $point_post->ID)

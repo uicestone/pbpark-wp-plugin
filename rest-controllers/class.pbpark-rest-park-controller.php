@@ -110,7 +110,7 @@ class PB_Park_REST_Park_Controller extends WP_REST_Controller {
 			'id' => $post->ID,
 			'slug' => $post->post_name,
 			'name' => get_the_title($post->ID),
-			'content' => $post->post_content,
+			'content' => preg_replace('/(\r?\n){2,}/', "\n", $post->post_content),
 			'address' => get_field('address', $post->ID),
 			'phone' => get_field('phone', $post->ID),
 			'points' => array_map(function($point_id) use($user){
