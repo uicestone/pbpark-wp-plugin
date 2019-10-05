@@ -33,6 +33,7 @@ class PB_Park_Admin {
 			foreach ( $value as $point_id ) {
 				update_post_meta($point_id, 'park', $post_id);
 			}
+			return $value;
 		}, 10, 3 );
 
 		register_post_type('point', array(
