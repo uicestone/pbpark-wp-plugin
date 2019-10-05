@@ -56,23 +56,36 @@ class PB_Park_REST_Misc_Controller extends WP_REST_Controller {
 
 		error_log("User {$user->id} location: " . json_encode($request->get_json_params()));
 		$near_point = null;
-		$points = array_map(function($point_post) use($user){
-			return get_point($point_post, true, $user);
+		$points = array_map(function($point_post) use($user, $body){
+			$point = get_point($point_post, true, $user);
+			if ($point->latitude && $point->longitude) {
+				$point->distance = haversine_great_circle_distance($point->latitude, $point->longitude, $body['latitude'], $body['longitude']);
+			} else {
+				$point->distance = null;
+			}
+			return $point;
 		}, get_posts(['post_type'=>'point', 'posts_per_page'=>-1]));
-		foreach ($points as $point) {
-			if (!$point->latitude || !$point->longitude) {
-				continue;
-			}
-			if (haversine_great_circle_distance($point->latitude, $point->longitude, $body['latitude'], $body['longitude']) <= 15) {
-				$near_point = $point;
-				break;
-			}
+
+		usort($points, function($a, $b){
+			if ($b->distance === null) return -1;
+			if ($a->distance === null) return 1;
+			return $a->distance < $b->distance ? -1 : 1;
+		});
+
+		if ($points[0]->distance !== null && $points[0]->distance < 15) {
+			$near_point = $points[0];
 		}
+
 		if ($request->get_param('mockNearPoint') && !$near_point) { //  near a point
 			$point_post = get_posts('post_type=point&order=asc')[0]; // mock near point
 			$near_point = get_point($point_post->ID, true, $user);
 		}
-		return rest_ensure_response(['nearPoint' => $near_point]);
+
+		$points_distance = array_map(function($point){
+			return ['name'=>$point->name, 'distance'=>$point->distance];
+		}, $points);
+
+		return rest_ensure_response(['nearPoint' => $near_point, 'points' => $points_distance]);
 	}
 
 	/**
