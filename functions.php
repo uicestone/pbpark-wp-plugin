@@ -74,7 +74,7 @@ function generate_weapp_qrcode($type, $id) {
 	return $wx->app_create_qr_code($key, '/pages/index/index' . $query, 1280);
 }
 
-function get_point($point_id, $with_questions = false) {
+function get_point($point_id, $with_questions = false, $user = null) {
 
 	if (is_a($point_id, 'WP_Post')) {
 		$point_post = $point_id;
@@ -90,6 +90,23 @@ function get_point($point_id, $with_questions = false) {
 		'latitude' => get_field('latitude', $point_post->ID),
 		'longitude' => get_field('longitude', $point_post->ID)
 	);
+
+	if ($user) {
+		// get user score of this point
+		$park_id = get_post_meta($point_post->ID, 'park', true);
+		$park_post = get_post($park_id);
+		$park_slug = $park_post->post_name;
+		$quiz_data = json_decode(get_user_meta($user->id, 'quiz_data_' . $park_slug, true));
+		if ($quiz_data) {
+			$point_quiz_data_match = array_filter($quiz_data, function($point_quiz_data) use($point) {
+				return $point_quiz_data->point === $point['slug'];
+			});
+			if ($point_quiz_data_match[0]) {
+				$point['duration'] = $point_quiz_data_match[0]->duration;
+				$point['correct'] = $point_quiz_data_match[0]->correct;
+			}
+		}
+	}
 
 	if ($with_questions) {
 		$point['questions'] = array_map('get_question', get_field('questions', $point_post->ID));
@@ -112,7 +129,7 @@ function get_question($question_id) {
 	$question = array(
 		'id' => $question_id,
 		'title' => $question_post->post_title,
-		'optionsAreImages' => $optionsAreImages,
+		'optionsAreImages' => !!$optionsAreImages,
 		'options' => $options,
 		'trueOption' => get_field('true_option', $question_id) - 1
 	);

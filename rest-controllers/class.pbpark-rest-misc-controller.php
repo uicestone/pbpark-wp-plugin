@@ -70,7 +70,7 @@ class PB_Park_REST_Misc_Controller extends WP_REST_Controller {
 		}
 		if ($request->get_param('mockNearPoint') && !$near_point) { //  near a point
 			$point_post = get_posts('post_type=point&order=asc')[0]; // mock near point
-			$near_point = get_point($point_post->ID, true);
+			$near_point = get_point($point_post->ID, true, $user);
 		}
 		return rest_ensure_response(['nearPoint' => $near_point]);
 	}
