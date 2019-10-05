@@ -29,6 +29,12 @@ class PB_Park_Admin {
 			'has_archive' => true
 		));
 
+		add_filter( 'acf/update_value/name=points', function($value, $post_id, $field ) {
+			foreach ( $value as $point_id ) {
+				update_post_meta($point_id, 'park', $post_id);
+			}
+		}, 10, 3 );
+
 		register_post_type('point', array(
 			'label' => '答题点',
 			'labels' => array(
@@ -96,18 +102,24 @@ class PB_Park_Admin {
 		add_filter('manage_point_posts_columns', function ($columns) {
 			$columns['desc'] = '描述';
 			$columns['park'] = '所属公园';
+			$columns['location'] = '坐标';
 			return $columns;
 		});
 
-		add_action('manage_coupon_posts_custom_column', function ($column_name) {
+		add_action('manage_point_posts_custom_column', function ($column_name) {
 			global $post;
 			switch ($column_name) {
 				case 'desc' :
-					echo get_post_meta($post->ID, 'desc', true);
+					echo mb_substr($post->post_content, 0, 40) . '…';
 					break;
-				case 'park' :
-					$park = get_field('park', $post->ID);
-					echo $park->post_title;
+				case 'park':
+					$park_id = get_post_meta($post->ID, 'park', true);
+					echo '<a href="' . admin_url('post.php?post=' . $park_id . '&action=edit') . '">' . get_post($park_id)->post_title . '</a>';
+					break;
+				case 'location' :
+					echo get_field('latitude', $post->ID);
+					echo '<br>';
+					echo get_field('longitude', $post->ID);
 					break;
 				default;
 			}
