@@ -98,12 +98,12 @@ function get_point($point_id, $with_questions = false, $user = null) {
 		$park_slug = $park_post->post_name;
 		$quiz_data = json_decode(get_user_meta($user->id, 'quiz_data_' . $park_slug, true));
 		if ($quiz_data) {
-			$point_quiz_data_match = array_filter($quiz_data, function($point_quiz_data) use($point) {
+			$points_quiz_result_match = array_filter($quiz_data, function($point_quiz_data) use($point) {
 				return $point_quiz_data->point === $point['slug'];
 			});
-			if ($point_quiz_data_match[0]) {
-				$point['duration'] = $point_quiz_data_match[0]->duration;
-				$point['correct'] = $point_quiz_data_match[0]->correct;
+			if ($point_quiz_result = array_pop($points_quiz_result_match)) {
+				$point['duration'] = $point_quiz_result->duration;
+				$point['correct'] = $point_quiz_result->correct;
 			}
 		}
 	}

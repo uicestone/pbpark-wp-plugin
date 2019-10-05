@@ -83,6 +83,10 @@ class PB_Park_REST_Park_Controller extends WP_REST_Controller {
 	 */
 	public static function get_park( $request ) {
 
+		if (is_wp_error($user = get_user_by_openid())) {
+			$user = null;
+		}
+
 		$id = $request->get_param('id');
 
 		$near = $request->get_param('near');
@@ -109,7 +113,9 @@ class PB_Park_REST_Park_Controller extends WP_REST_Controller {
 			'content' => $post->post_content,
 			'address' => get_field('address', $post->ID),
 			'phone' => get_field('phone', $post->ID),
-			'points' => array_map('get_point', get_field('points', $post->ID))
+			'points' => array_map(function($point_id) use($user){
+				return get_point($point_id, false, $user);
+			}, get_field('points', $post->ID))
 		);
 
 		if ($near_lat_long) {

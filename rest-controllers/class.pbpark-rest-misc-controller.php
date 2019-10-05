@@ -56,8 +56,8 @@ class PB_Park_REST_Misc_Controller extends WP_REST_Controller {
 
 		error_log("User {$user->id} location: " . json_encode($request->get_json_params()));
 		$near_point = null;
-		$points = array_map(function($point_post){
-			return get_point($point_post, true);
+		$points = array_map(function($point_post) use($user){
+			return get_point($point_post, true, $user);
 		}, get_posts(['post_type'=>'point', 'posts_per_page'=>-1]));
 		foreach ($points as $point) {
 			if (!$point->latitude || !$point->longitude) {
