@@ -107,7 +107,7 @@ class PB_Park_REST_Misc_Controller extends WP_REST_Controller {
 		if (!$quiz_data) {
 			$quiz_data = [];
 		}
-		if (in_array($point, array_column($quiz_data, 'point'))) {
+		if (in_array($point, array_column($quiz_data, 'point')) && !in_array('administrator', $user->roles)) {
 			return rest_ensure_response(new WP_Error('duplicate_result', '同一个点只能提交一次答案', array('status' => 409)));
 		}
 		array_push($quiz_data, (object) compact('point', 'duration', 'correct'));
