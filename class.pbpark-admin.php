@@ -65,6 +65,22 @@ class PB_Park_Admin {
 
 		}, 1);
 
+		add_action( 'add_meta_boxes', function($post_type, $post) {
+			if ($post_type !== 'point') return;
+			add_meta_box(
+				'qr-code',
+				__( '专用小程序二维码' ),
+				function() use ($post){
+					?>
+					<img src="<?=generate_weapp_qrcode($post->post_name)?>" style="width:100%">
+					<?php
+				},
+				null,
+				'side',
+				'default'
+			);
+		}, 10, 2 );
+
 		register_post_type('question', array(
 			'label' => '题目',
 			'labels' => array(

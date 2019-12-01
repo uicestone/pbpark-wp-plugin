@@ -65,13 +65,13 @@ function transformlng($lng, $lat) {
 	return $ret;
 };
 
-function generate_weapp_qrcode($type, $id) {
+function generate_weapp_qrcode($point_slug) {
 	$wx = new WeixinAPI(true);
 
-	$key = "qrcode-{$type}-{$id}";
-	$query = "?{$type}={$id}";
+	$key = "qrcode-point-{$point_slug}";
+	$query = "?point={$point_slug}";
 
-	return $wx->app_create_qr_code($key, '/pages/index/index' . $query, 1280);
+	return $wx->app_create_qr_code($key, '/pages/park/index' . $query, 1280);
 }
 
 function get_point($point_id, $with_questions = false, $user = null) {
