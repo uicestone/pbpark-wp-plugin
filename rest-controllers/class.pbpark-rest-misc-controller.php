@@ -32,6 +32,13 @@ class PB_Park_REST_Misc_Controller extends WP_REST_Controller {
 			)
 		) );
 
+		register_rest_route( $this->namespace, '/point/(?P<slug>.+)', array(
+			array(
+				'methods' => WP_REST_Server::READABLE,
+				'callback' => array( $this, 'get_point' ),
+			)
+		) );
+
 		register_rest_route( $this->namespace, '/point/(?P<id>.+)', array(
 			array(
 				'methods' => WP_REST_Server::EDITABLE,
@@ -208,6 +215,20 @@ class PB_Park_REST_Misc_Controller extends WP_REST_Controller {
 		];
 
 		return rest_ensure_response(compact('tops', 'myRanking'));
+	}
+
+	/**
+	 * Get detail of a point, including questions
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_Error|WP_REST_Response
+	 */
+	public static function get_point($request) {
+		$slug = $request->get_param('slug');
+		$with_questions = $request->get_param('withQuestions');
+		$point_post = get_page_by_path($slug, 'OBJECT', 'point');
+		$point = get_point($point_post, !!$with_questions && strtoupper($with_questions) !== 'FALSE');
+		return rest_ensure_response($point);
 	}
 
 	/**
