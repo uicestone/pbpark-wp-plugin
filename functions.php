@@ -82,12 +82,18 @@ function get_point($point_id, $with_questions = false, $user = null) {
 		$point_post = get_post($point_id);
 	}
 
+	$thumbnail_url = get_the_post_thumbnail_url($point_post->ID, 'full');
+
+	if (defined('CDN_URL') && $thumbnail_url) {
+		$thumbnail_url = preg_replace('/' . preg_quote(site_url(), '/') . '\//', constant('CDN_URL'), $thumbnail_url);
+	}
+
 	$point = array(
 		'id' => $point_post->ID,
 		'name' => $point_post->post_title,
 		'slug' => $point_post->post_name,
 		'content' => preg_replace('/(\r?\n){2,}/', "\n", $point_post->post_content),
-		'thumbnail_url' => get_the_post_thumbnail_url($point_post->ID, 'full'),
+		'thumbnail_url' => $thumbnail_url,
 		'latitude' => get_field('latitude', $point_post->ID),
 		'longitude' => get_field('longitude', $point_post->ID)
 	);
