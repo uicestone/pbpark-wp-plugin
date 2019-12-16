@@ -2,7 +2,7 @@
 /*
 Plugin Name: 马陆党建地图
 Description: 提供马陆党建地图后台管理和RESTful API数据接口
-Version: 0.1.0
+Version: 1.0.0
 Author: Uice Lu
 Author URI: https://cecilia.uice.lu
 License: GPLv2 or later
