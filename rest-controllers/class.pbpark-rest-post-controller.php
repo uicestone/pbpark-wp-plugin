@@ -62,49 +62,8 @@ class PB_Park_REST_Post_Controller extends WP_REST_Controller {
 
 
 		$items = array_map(function (WP_Post $post) {
-			$author = get_user_by('ID', $post->post_author);
-			$categories = get_the_category($post->ID);
-
-			$content = do_shortcode(wptexturize(wpautop($post->post_content)));
-			$posterUrl = get_the_post_thumbnail_url($post->ID) ?: null;
-
-			if (defined('CDN_URL')) {
-				$cdn_url = constant('CDN_URL');
-				if ($posterUrl) {
-					$posterUrl = preg_replace('/' . preg_quote(site_url(), '/') . '\//', $cdn_url, $posterUrl);
-				}
-				$content = preg_replace('/src="' . preg_quote(site_url(), '/') . '\/(.*?)\.(jpg|png|gif|mp3|mp4)"/', 'src="' . $cdn_url . '$1.$2"', $content);
-			}
-
-			if (defined('CDN_URL_QPIC')) {
-				$cdn_url_qpic = constant('CDN_URL_QPIC');
-				$content = preg_replace('/https?:\/\/mmbiz.qpic.cn\//', $cdn_url_qpic, $content);
-			}
-
-			$item = array(
-				'id' => $post->ID,
-				'title' => get_the_title($post->ID),
-				'excerpt' => get_the_excerpt($post->ID),
-				'content' => $content,
-				'status' => $post->post_status,
-				'slug' => $post->post_name,
-				'posterUrl' => $posterUrl,
-				'categories' => $categories,
-				'author' => (object) array(
-					'id' => $author->ID,
-					'name' => $author->display_name,
-					'roles' => $author->roles
-				),
-				'createdAt' => $post->post_date,
-				'updatedAt' => $post->post_modified
-			);
-
-			if ($date = get_post_meta($post->ID, 'date', true)) {
-				$item['date'] = $date;
-			}
-
-			return (object) $item;
-
+			$item = self::get_post_data($post);
+			return $item;
 		}, $posts);
 
 		return rest_ensure_response($items);
@@ -126,10 +85,19 @@ class PB_Park_REST_Post_Controller extends WP_REST_Controller {
 			$post = get_page_by_path($id);
 		}
 
+		$item = self::get_post_data($post, true);
+
+		return rest_ensure_response($item);
+
+	}
+
+	private static function get_post_data($post, $show_content = false) {
 		$author = get_user_by('ID', $post->post_author);
 		$categories = get_the_category($post->ID);
 
-		$content = do_shortcode(wptexturize(wpautop($post->post_content)));
+		if ($show_content) {
+			$content = do_shortcode(wptexturize(wpautop($post->post_content)));
+		}
 		$posterUrl = get_the_post_thumbnail_url($post->ID) ?: null;
 
 		if (defined('CDN_URL')) {
@@ -137,19 +105,22 @@ class PB_Park_REST_Post_Controller extends WP_REST_Controller {
 			if ($posterUrl) {
 				$posterUrl = preg_replace('/' . preg_quote(site_url(), '/') . '\//', $cdn_url, $posterUrl);
 			}
-			$content = preg_replace('/src="' . preg_quote(site_url(), '/') . '\/(.*?)\.(jpg|png|gif|mp3|mp4)"/', 'src="' . $cdn_url . '$1.$2"', $content);
+			if (isset($content)) {
+				$content = preg_replace('/src="' . preg_quote(site_url(), '/') . '\/(.*?)\.(jpg|png|gif|mp3|mp4)"/', 'src="' . $cdn_url . '$1.$2"', $content);
+			}
 		}
 
 		if (defined('CDN_URL_QPIC')) {
 			$cdn_url_qpic = constant('CDN_URL_QPIC');
-			$content = preg_replace('/https?:\/\/mmbiz.qpic.cn\//', $cdn_url_qpic, $content);
+			if (isset($content)) {
+				$content = preg_replace('/https?:\/\/mmbiz.qpic.cn\//', $cdn_url_qpic, $content);
+			}
 		}
 
 		$item = array(
 			'id' => $post->ID,
 			'title' => get_the_title($post->ID),
 			'excerpt' => get_the_excerpt($post->ID),
-			'content' => $content,
 			'status' => $post->post_status,
 			'slug' => $post->post_name,
 			'posterUrl' => $posterUrl,
@@ -163,8 +134,25 @@ class PB_Park_REST_Post_Controller extends WP_REST_Controller {
 			'updatedAt' => $post->post_modified
 		);
 
-		return rest_ensure_response($item);
+		if (isset($content)) {
+			$item['content'] = $content;
+		}
 
+		if (in_array('党课精选', array_column($categories, 'cat_name'))) {
+			$item['videoListLayout'] = get_field('layout', $post->ID);
+			if ($show_content) {
+				$item['videos'] = array_map(function($post_id){
+					$post = get_post($post_id);
+					return static::get_post_data($post, true);
+				}, get_field('videos', $post->ID));
+			}
+		}
+
+		if (in_array('党课视频图文链接', array_column($categories, 'cat_name'))) {
+			$item['link'] = get_field('link', $post->ID);
+		}
+
+		return (object) $item;
 	}
 
 }
