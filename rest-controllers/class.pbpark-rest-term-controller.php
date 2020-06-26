@@ -33,6 +33,13 @@ class PB_Park_REST_Term_Controller extends WP_REST_Controller {
 
 		$image = get_field('image', $term);
 
+		if (defined('CDN_URL')) {
+			$cdn_url = constant('CDN_URL');
+			if ($image) {
+				$image = preg_replace('/' . preg_quote(site_url(), '/') . '\//', $cdn_url, $image);
+			}
+		}
+
 		$term->image = $image;
 
 		return rest_ensure_response($term);
