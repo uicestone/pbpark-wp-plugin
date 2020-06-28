@@ -36,7 +36,7 @@ class PB_Park_REST_Term_Controller extends WP_REST_Controller {
 		if (defined('CDN_URL')) {
 			$cdn_url = constant('CDN_URL');
 			if ($image) {
-				$image = preg_replace('/' . preg_quote(site_url(), '/') . '\//', $cdn_url, $image);
+				$image = preg_replace('/' . str_replace('http\\', 'https?\\', preg_quote(site_url(), '/')) . '\//', $cdn_url, $image);
 			}
 		}
 
