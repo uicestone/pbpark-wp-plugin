@@ -93,6 +93,19 @@ class PB_Park_Admin {
 			'supports' => array('title'),
 			'menu_icon' => 'dashicons-admin-page'
 		));
+
+		register_post_type('100d', array(
+			'label' => '100天',
+			'labels' => array(
+				'all_items' => '所有天',
+				'add_new' => '添加一天',
+				'add_new_item' => '新天',
+				'not_found' => '未找到天'
+			),
+			'public' => true,
+			'supports' => array('title'),
+			'menu_icon' => 'dashicons-buddicons-community'
+		));
 	}
 
 	protected static function manage_admin_columns() {
@@ -150,6 +163,27 @@ class PB_Park_Admin {
 		add_action('manage_question_posts_custom_column', function ($column_name) {
 			global $post;
 			switch ($column_name) {
+				default;
+			}
+		});
+
+		add_filter('manage_100d_posts_columns', function ($columns) {
+			$columns['type'] = '类型';
+			$columns['requirement'] = '要求';
+			unset($columns['date']);
+			$columns['date'] = '日期';
+			return $columns;
+		});
+
+		add_action('manage_100d_posts_custom_column', function ($column_name) {
+			global $post;
+			switch ($column_name) {
+				case 'type' :
+					echo get_field('type', $post->ID);
+					break;
+				case 'requirement' :
+					echo get_field('requirement', $post->ID);
+					break;
 				default;
 			}
 		});

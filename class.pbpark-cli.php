@@ -80,7 +80,7 @@ class PB_Park_CLI extends WP_CLI_Command {
 	 */
 	public function import_questions() {
 		global $wpdb;
-		$questions = $wpdb->get_results("SELECT * FROM `questions`");
+		$questions = $wpdb->get_results("SELECT * FROM `park_questions`");
 		$points_questions = [];
 		foreach ($questions as $question) {
 			$existing_questions = get_posts(['title' => $question->title, 'post_type'=>'question']);
@@ -107,6 +107,49 @@ class PB_Park_CLI extends WP_CLI_Command {
 			$point_post = get_page_by_path($point, OBJECT, 'point');
 			update_field('questions', $question_ids, $point_post->ID);
 			WP_CLI::line('点位：' . $point_post->post_name . '设置了' . count($question_ids) . '道题目');
+		}
+	}
+
+	public function import_100_questions() {
+		global $wpdb;
+		$questions = $wpdb->get_results("SELECT * FROM `100_questions`");
+		$days_questions = [];
+		foreach ($questions as $question) {
+			$existing_questions = get_posts(['title' => $question->question, 'post_type'=>'question']);
+
+			if ($existing_questions) {
+				$question_post_id = $existing_questions[0]->ID;
+			} else {
+				$question_post_id = wp_insert_post(array(
+					'post_title' => $question->question,
+					'post_type' => 'question',
+					'post_status' => 'publish'
+				));
+			}
+			$options = [$question->option1, $question->option2, $question->option3];
+			update_field('options', implode("\r\n", $options), $question_post_id);
+			update_field('true_option', $question->answer, $question_post_id);
+			if (empty($days_questions[$question->day])) {
+				$days_questions[$question->day] = [];
+			}
+			WP_CLI::line('已导入题目：' . mb_substr($question->question, 0, 20) . '，天：' . $question->day . '，题目ID：' . $question_post_id);
+			array_push($days_questions[$question->day], $question_post_id);
+		}
+		foreach ($days_questions as $day => $question_ids) {
+			$day_posts = get_posts(['post_type'=>'100d','meta_key'=>'day','meta_value'=>$day]);
+			if (!$day_posts) {
+				$day_post_id = wp_insert_post(array(
+					'post_title' => "第{$day}天",
+					'post_name' => "day-{$day}",
+					'post_type' => '100d',
+					'post_status' => 'publish'
+				));
+				update_field('day',$day,$day_post_id);
+				update_field('type','qa',$day_post_id);
+			}
+			$day_post = get_page_by_path("day-{$day}", OBJECT, '100d');
+			update_field('questions', $question_ids, $day_post->ID);
+			WP_CLI::line('天：' . $day_post->post_name . '设置了' . count($question_ids) . '道题目');
 		}
 	}
 
