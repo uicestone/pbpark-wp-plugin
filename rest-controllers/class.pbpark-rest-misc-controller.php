@@ -45,6 +45,20 @@ class PB_Park_REST_Misc_Controller extends WP_REST_Controller {
 				'callback' => array( $this, 'set_point_location' ),
 			)
 		) );
+
+		register_rest_route( $this->namespace, '/option/(?P<key>.+)', array(
+			array(
+				'methods' => WP_REST_Server::READABLE,
+				'callback' => array( $this, 'get_option' ),
+			)
+		) );
+
+		register_rest_route( $this->namespace, '/user', array(
+			array(
+				'methods' => WP_REST_Server::EDITABLE,
+				'callback' => array( $this, 'update_user' ),
+			)
+		) );
 	}
 
 	/**
@@ -243,5 +257,34 @@ class PB_Park_REST_Misc_Controller extends WP_REST_Controller {
 		update_field('latitude', $body['latitude'], $point_id);
 		update_field('longitude', $body['longitude'], $point_id);
 		return rest_ensure_response(get_point($point_id));
+	}
+
+	/**
+	 * Get options
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_Error|WP_REST_Response
+	 */
+	public static function get_option($request) {
+		$key = $request->get_param('key');
+		$option_value = get_option($key);
+		$orgs = json_decode(($option_value));
+		return rest_ensure_response($orgs);
+	}
+
+	/**
+	 * Update user
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_Error|WP_REST_Response
+	 */
+	public static function update_user($request) {
+		$openid = $request->get_param('openid');
+		$body = $request->get_json_params();
+		$user = get_user_by_openid($openid);
+		foreach ($body as $key => $value) {
+			update_user_meta($user->id, $key, $value);
+		}
+		return rest_ensure_response(get_user_by_openid($openid));
 	}
 }
