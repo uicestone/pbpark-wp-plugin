@@ -106,6 +106,19 @@ class PB_Park_Admin {
 			'supports' => array('title'),
 			'menu_icon' => 'dashicons-buddicons-community'
 		));
+
+		register_post_type('100a', array(
+			'label' => '100天打卡',
+			'labels' => array(
+				'all_items' => '所有打卡',
+				'add_new' => '添加打卡',
+				'add_new_item' => '新打卡',
+				'not_found' => '未找到打卡'
+			),
+			'public' => true,
+			'supports' => array('title'),
+			'menu_icon' => 'dashicons-editor-spellcheck'
+		));
 	}
 
 	protected static function manage_admin_columns() {
@@ -183,6 +196,27 @@ class PB_Park_Admin {
 					break;
 				case 'requirement' :
 					echo get_field('requirement', $post->ID);
+					break;
+				default;
+			}
+		});
+
+		add_filter('manage_100a_posts_columns', function ($columns) {
+			$columns['type'] = '类型';
+			$columns['answer'] = '内容';
+			unset($columns['date']);
+			$columns['date'] = '日期';
+			return $columns;
+		});
+
+		add_action('manage_100a_posts_custom_column', function ($column_name) {
+			global $post;
+			switch ($column_name) {
+				case 'type' :
+					echo get_field('type', $post->ID);
+					break;
+				case 'answer' :
+					echo get_field('answer', $post->ID);
 					break;
 				default;
 			}
