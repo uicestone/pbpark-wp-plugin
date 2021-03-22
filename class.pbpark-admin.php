@@ -225,15 +225,33 @@ class PB_Park_Admin {
 		add_filter( 'manage_users_columns', function ( $column ) {
 			unset($column['email']);
 			unset($column['posts']);
+			$column['registered'] = '注册时间';
 			return $column;
 		} );
 
 
 		add_filter( 'manage_users_custom_column', function ( $val, $column_name, $user_id ) {
 			switch($column_name) {
-				default:
+			  case 'registered':
+				  $user = get_userdata($user_id);
+				  return get_date_from_gmt($user->user_registered);
+			  default:
 			}
 		}, 10, 3 );
+
+		add_filter('manage_users_sortable_columns', function($sortable_columns){
+			$sortable_columns['reg_time'] = 'reg_time';
+			return $sortable_columns;
+		});
+
+		add_action('pre_user_query', function($query){
+			if(!isset($_REQUEST['orderby']) || $_REQUEST['orderby']=='reg_time' ){
+				if( !in_array($_REQUEST['order'],array('asc','desc')) ){
+					$_REQUEST['order'] = 'desc';
+				}
+				$query->query_orderby = "ORDER BY user_registered ".$_REQUEST['order']."";
+			}
+		});
 
 		/**
 		 * Convert values of ACF core date time pickers from Y-m-d H:i:s to timestamp
