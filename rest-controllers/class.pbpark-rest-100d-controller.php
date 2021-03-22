@@ -41,13 +41,17 @@ class PB_Park_REST_100d_Controller extends WP_REST_Controller {
 	 * @return WP_Error|WP_REST_Response
 	 */
 	public static function get_100ds( $request ) {
-
-		$items = array_map(function (WP_Post $post) {
+		$target = strtotime('2021-06-28T00:00:00+0800');
+		$daysLeft = (int)ceil(($target - time()) / 86400);
+		$latestDay = 100 - $daysLeft + 1;
+		$items = array_map(function (WP_Post $post) use($latestDay) {
+			$day = (int)get_field('day',$post->ID);
 			$item = (object)[
 				'id'=>$post->ID,
 				'title'=>$post->post_title,
 				'day'=>(int)get_field('day',$post->ID),
-				'type'=>get_field('type',$post->ID)
+				'type'=>get_field('type',$post->ID),
+				'available'=>$day<=$latestDay
 			];
 			return $item;
 		}, get_posts(['post_type'=>'100d','order'=>'asc','posts_per_page'=>-1]));
@@ -119,6 +123,7 @@ class PB_Park_REST_100d_Controller extends WP_REST_Controller {
 		update_field('day', $day->day, $answer_id);
 		update_field('type', $day->type, $answer_id);
 		update_field('answer', $answer_data['answer'], $answer_id);
+		update_field('openid', 'openid', $answer_id);
 
 		$answered_days = json_decode(get_user_meta($user->ID, 'answered_days', true) ?: '[]');
 		array_push($answered_days,(int)$day->day);
