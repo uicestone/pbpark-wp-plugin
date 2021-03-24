@@ -59,6 +59,13 @@ class PB_Park_REST_Misc_Controller extends WP_REST_Controller {
 				'callback' => array( $this, 'update_user' ),
 			)
 		) );
+
+		register_rest_route( $this->namespace, '/photo', array(
+			array(
+				'methods' => WP_REST_Server::EDITABLE,
+				'callback' => array( $this, 'upload_photo' ),
+			)
+		) );
 	}
 
 	/**
@@ -286,5 +293,26 @@ class PB_Park_REST_Misc_Controller extends WP_REST_Controller {
 			update_user_meta($user->id, $key, $value);
 		}
 		return rest_ensure_response(get_user_by_openid($openid));
+	}
+
+	/**
+	 * Upload photo
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_Error|WP_REST_Response
+	 */
+	public static function upload_photo($request) {
+		if ( ! function_exists( 'wp_handle_upload' ) ) {
+			require_once( ABSPATH . 'wp-admin/includes/file.php' );
+		}
+		$files =  $request->get_file_params();
+		$file = wp_handle_upload($files['photo'], array('test_form' => false));
+
+		if ( $file && empty( $file['error'] ) ) {
+			return rest_ensure_response($file);
+		} else {
+			return rest_ensure_response(new WP_Error(400, $file['error']));
+		}
+
 	}
 }

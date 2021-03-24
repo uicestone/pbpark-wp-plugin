@@ -41,7 +41,7 @@ class PB_Park_REST_100d_Controller extends WP_REST_Controller {
 	 * @return WP_Error|WP_REST_Response
 	 */
 	public static function get_100ds( $request ) {
-		$target = strtotime('2021-06-28T00:00:00+0800');
+		$target = strtotime('2021-07-01T00:00:00+0800');
 		$daysLeft = (int)ceil(($target - time()) / 86400);
 		$latestDay = 100 - $daysLeft + 1;
 		$items = array_map(function (WP_Post $post) use($latestDay) {
@@ -77,6 +77,14 @@ class PB_Park_REST_100d_Controller extends WP_REST_Controller {
 			'type'=>get_field('type',$post->ID),
 			'requirement'=>get_field('requirement',$post->ID),
 		];
+
+		if ($item->type === 'qa') {
+			$question_ids = get_field('questions', $post->ID);
+			$questions = array_map(function($id) {
+				return get_question($id);
+			}, $question_ids);
+			$item->questions = $questions;
+		}
 
 		return rest_ensure_response($item);
 
@@ -114,16 +122,18 @@ class PB_Park_REST_100d_Controller extends WP_REST_Controller {
 
 		$answer_data = $request->get_json_params();
 
+		$user = get_users(['meta_key'=>'openid', 'meta_value'=>$openid])[0];
+
 		$answer_id = wp_insert_post(array(
 			'post_title' => "{$openid_label}的打卡：第{$day->day}天",
 			'post_type' => '100a',
-			'post_status' => 'publish'
+			'post_status' => 'publish',
+			'post_author' => $user->ID
 		));
 
 		update_field('day', $day->day, $answer_id);
 		update_field('type', $day->type, $answer_id);
 		update_field('answer', $answer_data['answer'], $answer_id);
-		update_field('openid', 'openid', $answer_id);
 
 		$answered_days = json_decode(get_user_meta($user->ID, 'answered_days', true) ?: '[]');
 		array_push($answered_days,(int)$day->day);

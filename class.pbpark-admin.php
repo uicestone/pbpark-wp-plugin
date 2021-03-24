@@ -203,6 +203,8 @@ class PB_Park_Admin {
 
 		add_filter('manage_100a_posts_columns', function ($columns) {
 			$columns['type'] = '类型';
+			$columns['user'] = '昵称';
+			$columns['organization'] = '支部';
 			$columns['answer'] = '内容';
 			unset($columns['date']);
 			$columns['date'] = '日期';
@@ -211,12 +213,25 @@ class PB_Park_Admin {
 
 		add_action('manage_100a_posts_custom_column', function ($column_name) {
 			global $post;
+			$type = get_field('type', $post->ID);
+			$answer = get_field('answer', $post->ID);
 			switch ($column_name) {
 				case 'type' :
-					echo get_field('type', $post->ID);
+					echo $type;
 					break;
 				case 'answer' :
-					echo get_field('answer', $post->ID);
+					if ($type === 'text') {
+						echo $answer;
+					} elseif ($type === 'photo') {
+						echo '<img width="100px" src="' . $answer . '" />';
+					}
+					break;
+				case 'user' :
+					$user = get_user_by('ID', $post->post_author);
+					echo $user->display_name;
+					break;
+				case 'organization' :
+					echo get_user_meta($post->post_author, 'organization', true);
 					break;
 				default;
 			}
