@@ -223,7 +223,9 @@ class PB_Park_Admin {
 					if ($type === 'text') {
 						echo $answer;
 					} elseif ($type === 'photo') {
-						echo '<img width="100px" src="' . $answer . '" />';
+						echo '<a href="' . $answer . '" target="_blank"><img width="100px" src="' . $answer . '" /></a>';
+					} elseif ($type === 'video') {
+						echo '<a href="#" onClick="MyWindow=window.open(\'' . addslashes($answer) . '\',\'MyWindow\',\'width=1280,height=720\'); return false">查看</a>';
 					}
 					break;
 				case 'user' :
@@ -326,24 +328,35 @@ class PB_Park_Admin {
 
 			global $current_screen;
 
-			if ($current_screen->post_type == '') {
+			if ($current_screen->post_type == '100a') {
 				?>
-				<select name="used">
-					<option value=""<?php if (empty($_GET['used'])){ ?> selected<?php } ?>>已使用</option>
-					<option value="false"<?php if ($_GET['used']==='false'){ ?> selected<?php } ?>>未使用</option>
+				第<input type="number" min="1" max="100" name="nthday" value="<?=$_GET['nthday']?>" style="height:30px;width:45px">天
+			  	<select name="organization" style="width:130px">
+					<option value="" <?php if (!$_GET['organization']){ ?> selected<?php } ?>>全部支部</option>
+					<?php foreach (json_decode(get_option('malu_organizations')) as $org_group): ?>
+		  			<?php 	foreach ($org_group->units as $unit): ?>
+					<option value="<?=$unit?>" <?php if ($_GET['organization'] === $unit){ ?> selected<?php } ?>><?=$unit?></option>
+					<?php 	endforeach; ?>
+					<?php endforeach; ?>
 				</select>
 				<?php
 			}
 		});
 
 		add_filter('parse_query', function ($query) {
-			if (is_admin() && $query->query['post_type'] === '') {
+			if (is_admin() && $query->query['post_type'] === '100a') {
 				$qv = &$query->query_vars;
 				$qv['meta_query'] = array();
-				if (empty($_GET['used'])) {
+				if ($_GET['nthday']) {
 					$qv['meta_query'][] = array(
-						'field' => 'used',
-						'value' => '1'
+						'key' => 'day',
+						'value' => $_GET['nthday']
+					);
+				}
+				if ($_GET['organization']) {
+					$qv['meta_query'][] = array(
+						'key' => 'organization',
+						'value' => $_GET['organization']
 					);
 				}
 			}
