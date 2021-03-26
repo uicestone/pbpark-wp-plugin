@@ -123,6 +123,7 @@ class PB_Park_REST_100d_Controller extends WP_REST_Controller {
 		$answer_data = $request->get_json_params();
 
 		$user = get_users(['meta_key'=>'openid', 'meta_value'=>$openid])[0];
+		$organization = get_user_meta($user->ID, 'organization', true);
 
 		$answer_id = wp_insert_post(array(
 			'post_title' => "{$openid_label}的打卡：第{$day->day}天",
@@ -134,6 +135,7 @@ class PB_Park_REST_100d_Controller extends WP_REST_Controller {
 		update_field('day', $day->day, $answer_id);
 		update_field('type', $day->type, $answer_id);
 		update_field('answer', $answer_data['answer'], $answer_id);
+		update_field('organization', $organization, $answer_id);
 
 		$answered_days = json_decode(get_user_meta($user->ID, 'answered_days', true) ?: '[]');
 		array_push($answered_days,(int)$day->day);
