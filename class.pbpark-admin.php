@@ -103,7 +103,7 @@ class PB_Park_Admin {
 				'not_found' => '未找到天'
 			),
 			'public' => true,
-			'supports' => array('title'),
+			'supports' => array('title', 'revisions'),
 			'menu_icon' => 'dashicons-buddicons-community'
 		));
 
