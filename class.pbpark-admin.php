@@ -230,7 +230,7 @@ class PB_Park_Admin {
 					break;
 				case 'user' :
 					$user = get_user_by('ID', $post->post_author);
-					echo $user->display_name;
+					echo '<a href="' . site_url() . '/wp-admin/edit.php?post_type=100a&author=' . $user->ID . '">' . $user->display_name . '</a>';
 					break;
 				case 'organization' :
 					echo get_user_meta($post->post_author, 'organization', true);
