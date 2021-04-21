@@ -86,6 +86,14 @@ class PB_Park_REST_100d_Controller extends WP_REST_Controller {
 			$item->questions = $questions;
 		}
 
+		if ($item->type === 'text') {
+			$is_poster_guess = get_field('is_poster_guess', $post->ID);
+			if ($is_poster_guess) {
+				$item->poster = get_field('poster', $post->ID);
+				$item->answer = get_field('poster_name_answer', $post->ID);
+			}
+		}
+
 		return rest_ensure_response($item);
 
 	}
