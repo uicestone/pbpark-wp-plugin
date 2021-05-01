@@ -226,6 +226,9 @@ class PB_Park_Admin {
 						echo '<a href="' . $answer . '" target="_blank"><img width="100px" src="' . $answer . '" /></a>';
 					} elseif ($type === 'video') {
 						echo '<a href="#" onClick="MyWindow=window.open(\'' . addslashes($answer) . '\',\'MyWindow\',\'width=1280,height=720\'); return false">查看</a>';
+					} elseif ($type === 'voice') {
+						// echo '<audio src="' . $answer . '" controls>';
+					  echo $answer;
 					}
 					break;
 				case 'user' :

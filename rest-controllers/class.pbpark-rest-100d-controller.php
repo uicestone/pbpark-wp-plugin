@@ -94,6 +94,17 @@ class PB_Park_REST_100d_Controller extends WP_REST_Controller {
 			}
 		}
 
+		if ($item->type === 'voice') {
+			$item->poster = get_field('voice_poster', $post->ID);
+			$item->video = get_field('voice_video', $post->ID);
+			if (defined('CDN_URL')) {
+				$cdn_url = constant('CDN_URL');
+				if ($item->video) {
+					$item->video = preg_replace('/' . str_replace('http\\', 'https?\\', preg_quote(site_url(), '/')) . '\//', $cdn_url, $item->video);
+				}
+			}
+		}
+
 		return rest_ensure_response($item);
 
 	}
