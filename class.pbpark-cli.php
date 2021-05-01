@@ -153,4 +153,23 @@ class PB_Park_CLI extends WP_CLI_Command {
 		}
 	}
 
+	public function download_voice() {
+		$answer_posts = get_posts(['post_type' => '100a', 'meta_key' => 'type', 'meta_value' => 'voice', 'posts_per_page' => -1]);
+		$wx = new WeixinAPI(true);
+		foreach ($answer_posts as $answer_post) {
+			$media_id = get_field('answer', $answer_post->ID);
+			$path = wp_upload_dir()['basedir'] . '/voice/' . $media_id;
+			if (!file_exists($path . '.amr')) {
+				$data_amr = $wx->download_media($media_id);
+				file_put_contents($path . '.amr', $data_amr);
+				WP_CLI::line("语音文件" . $path . '.amr 已保存');
+			}
+			if (!file_exists($path . '.speex')) {
+				$data_speex = $wx->download_jssdk_media($media_id);
+				file_put_contents($path . '.speex', $data_speex);
+				WP_CLI::line("语音文件" . $path . '.speex 已保存');
+			}
+		}
+	}
+
 }
