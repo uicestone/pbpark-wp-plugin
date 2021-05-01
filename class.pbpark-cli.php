@@ -158,6 +158,7 @@ class PB_Park_CLI extends WP_CLI_Command {
 		$wx = new WeixinAPI(true);
 		foreach ($answer_posts as $answer_post) {
 			$media_id = get_field('answer', $answer_post->ID);
+			if (!$media_id || preg_match('/\//', $media_id)) continue;
 			$path = wp_upload_dir()['basedir'] . '/voice/' . $media_id;
 			if (!file_exists($path . '.amr')) {
 				$data_amr = $wx->download_media($media_id);
@@ -170,6 +171,7 @@ class PB_Park_CLI extends WP_CLI_Command {
 				WP_CLI::line("语音文件" . $path . '.speex 已保存');
 			}
 		}
+		WP_CLI::line("已检查" . count($answer_posts) . "个语音打卡");
 	}
 
 }
