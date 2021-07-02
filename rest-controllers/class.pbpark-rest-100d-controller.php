@@ -117,6 +117,10 @@ class PB_Park_REST_100d_Controller extends WP_REST_Controller {
 	 */
 	public static function save_100d_answer( $request ) {
 
+		if (time()>strtotime("2021-07-01 23:59:59")) {
+			return rest_ensure_response(new WP_Error('answer_time_out', '打卡时间已结束', array('status' => 401)));
+		}
+
 		$post = get_post($request->get_param('id'));
 		$openid = $request->get_param('openid');
 		$user = get_user_by_openid($openid);
